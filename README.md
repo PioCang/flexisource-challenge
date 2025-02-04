@@ -11,20 +11,27 @@ newvenv flexisource 3.11.3
 pyenv activate flexisource
 ```
 
-2. Clone the repository
+2. Clone the repository and enter the project folder
 ```
 git clone https://github.com/PioCang/flexisource-challenge.git
 cd flexisource-challenge/flexisource/
 ```
 
-3. Create a `.env` file inside **flexisource-challenge/flexisource/**
+3. Install the requirements. (Ensure the `fleixsource` virtual env is activated.)
+```
+pip install -r requirements
+```
+
+4. Create a `.env` file inside **flexisource-challenge/flexisource/**
 ```bash
 echo "SECRET_KEY=\"django-insecure-any-random-string\"\nDEBUG=True" > test
 ```
 
-4. Run the server
+5. Run the server. We're going to be using the `sqlite` server here so no DB
+backend will be needed.
 ```
-python manage.py runserver
+python manage.py migrate
+python manage.py runserver 8000
 ```
 
 
