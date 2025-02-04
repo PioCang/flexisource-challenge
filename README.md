@@ -1,5 +1,20 @@
 # flexisource-challenge
 
+## IMPORTANT: Design decisions
+I've made the following decisions in order to accelerate and simplify the logic
+of the app without contravening the bullet points laid out in the Coding Challenge
+Document. Admittedly, these design decisions are ***frankly absurd*** for a
+trading app. These premises that do not hold in the real world (and would be
+catastrophic to the concept of finance as we know it).
+
+1. Users have unlimited purchasing power.
+2. Stocks have an unlimited number for shares for trading.
+3. The value of the stocks remain constant.
+4. A user can unilaterally buy or sell a stock anytime i.e., no counterparty.
+5. No fractional shares are allowed to be bought or sold.
+6. The market is always open for trading.
+
+
 ## 1 Prepping virtual env
 Let's prep a virtual env. I assume you have **pyenv** installed.
 For a small application, I want to avoid the memory requirements of Dockerizing
