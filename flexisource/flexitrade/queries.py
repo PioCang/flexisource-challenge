@@ -36,12 +36,18 @@ def load_portfolio(owner):
         .annotate(
             total_value=F("total_quantity") * F("stock__price"),
             ticker_symbol=F("stock__ticker_symbol"),
+            price=F("stock__price"),
         )
-        .values("ticker_symbol", "total_value", "total_quantity")
+        .values("ticker_symbol", "total_value", "total_quantity", "price")
         .order_by("ticker_symbol")
     )
 
-    return queryset
+    results = {}
+    for stock in queryset:
+        ticker_symbol = stock.pop("ticker_symbol")
+        results[ticker_symbol] = stock
+
+    return results
 
 
 @staticmethod
