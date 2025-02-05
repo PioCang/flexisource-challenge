@@ -36,7 +36,7 @@ Response:
 
 ## Trade-related endpoints
 
-### Load portfolio
+### 1) Load portfolio
 Request:
 ```
 curl --request GET \
@@ -47,27 +47,27 @@ curl --request GET \
 
 Response:
 ```
-[
-    {
-        "ticker_symbol": "APPL",
+{
+    "APPL": {
         "total_value": 600.0,
-        "total_quantity": 300
+        "total_quantity": 300,
+        "price": 2.0
     },
-    {
-        "ticker_symbol": "GOOG",
+    "GOOG": {
         "total_value": 50.0,
-        "total_quantity": 50
+        "total_quantity": 50,
+        "price": 1.0
     },
-    {
-        "ticker_symbol": "TSLA",
-        "total_value": 106885.0,
-        "total_quantity": 500
+    "TSLA": {
+        "total_value": 213.77,
+        "total_quantity": 1,
+        "price": 213.77
     }
-]
+}
 ```
 
 
-### Single Trade
+### 2) Single Trade
 Request:
 ```
 curl --request POST \
@@ -80,12 +80,14 @@ curl --request POST \
   --form action=buy
 ```
 
-Possible Responses:
+Possible Response: Sucesss
 ```
 {
     "message": "100 shares of GOOG bought"
 }
 ```
+
+Possible Response: Failure
 ```
 {
     "symbol": [
@@ -99,10 +101,64 @@ Possible Responses:
     ]
 }
 ```
+
+Possible Response: Failure
 ```
 {
     "sell": [
         "Trying to sell 300 shares of GOOG, but user only owns 250 shares"
     ]
+}
+```
+
+
+### 3) Bulk Trade
+This one is tricky because you need to provide the filename inside the `Content-Disposition` header,
+while also providing the data as a hash for the `--data` flag
+
+Request:
+```
+curl --request POST \
+  --url http://localhost:8000/bulk_trade/ \
+  --header 'Authorization: Token <YOUR_AUTH_TOKEN>' \
+  --header 'Content-Disposition: form-data; name="file"; filename="<CSV_FILENAME.csv>"' \
+  --header 'Content-Type: multipart/form-data' \
+  --header 'User-Agent: insomnia/10.3.0' \
+  --data <CSV_FILEHASH>
+```
+
+Possible Response: Failure
+```
+{
+    "0": {
+        "quantity": [
+            "quantity must be a number"
+        ]
+    },
+    "1": {
+        "symbol": [
+            "no symbol provided"
+        ]
+    },
+    "2": {
+        "symbol": [
+            "symbol should be max 5 characters"
+        ]
+    },
+    "3": {
+        "sell": [
+            "Trying to sell 2000 shares of GOOG, but user only owns 50 shares"
+        ]
+    }
+}
+```
+
+Possible Response: Success
+```
+{
+    "0": "25 shares of MSFT bought",
+    "1": "200 shares of BRK bought",
+    "2": "5 shares of DOGE bought",
+    "3": "10 shares of GOOG sold"
 }
 ```

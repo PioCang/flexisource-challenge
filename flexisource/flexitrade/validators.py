@@ -13,6 +13,7 @@ class TradeValidator:
         self.symbol: str = params.get("symbol") or ""
         self.quantity: int = params.get("quantity") or 0
         self.action: str = params.get("action") or ""
+        self.owned_shares: int = params.get("existing_shares") or None
 
         self.errors = defaultdict(list)
 
@@ -96,8 +97,16 @@ class TradeValidator:
             self.action = self.action[:1]
 
     def validate_sell_order(self):
-        """Verify a sell order is valid with respect to shares owned by user"""
-        owned_shares = calculate_owned_shares(self.owner, self.symbol)
+        """Verify a sell order is valid with respect to shares owned by user
+
+        This part of the validation needs to hit the database if
+        `self.owned_shares` was not given
+        """
+        if self.owned_shares is None:
+            owned_shares = calculate_owned_shares(self.owner, self.symbol)
+        else:
+            owned_shares = self.owned_shares
+
         if self.quantity > owned_shares:
             msg = (
                 f"Trying to sell {self.quantity} shares of {self.symbol}, "
