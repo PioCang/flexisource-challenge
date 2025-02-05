@@ -35,3 +35,42 @@ Response:
 
 
 ## Trade-related endpoints
+### Single Trade
+Request:
+```
+curl --request POST \
+  --url http://localhost:8000/trade/ \
+  --header 'Authorization: Token <YOUR_AUTH_TOKEN>' \
+  --header 'Content-Type: multipart/form-data' \
+  --header 'User-Agent: insomnia/10.3.0' \
+  --form symbol=GOOG \
+  --form quantity=100 \
+  --form action=buy
+```
+
+Possible Responses:
+```
+{
+    "message": "100 shares of GOOG bought"
+}
+```
+```
+{
+    "symbol": [
+        "no symbol provided"
+    ],
+    "quantity": [
+        "quantity must be a number"
+    ],
+    "action": [
+        "action should be only one of ['buy', 'sell']"
+    ]
+}
+```
+```
+{
+    "sell": [
+        "Trying to sell 300 shares of GOOG, but user only owns 250 shares"
+    ]
+}
+```
