@@ -13,6 +13,9 @@ catastrophic to the concept of finance as we know it).
 4. A user can unilaterally buy or sell a stock anytime i.e., no counterparty.
 5. No fractional shares are allowed to be bought or sold.
 6. The market is always open for trading.
+7. If a user attempts to buy an unrecognized stock, the stock will be created instantaneously with a randomized price. Essentially, this means the user can buy any stock out of thin air.
+8. A user can only sell whatever quantity he has previously owned of a stock.
+9. The holdings of a user are calculated by tracing the trades throughout history. The holdings are not saved into database, and so are recalculated each time.
 
 
 ## 1 Prepping the venv to run the server
@@ -54,7 +57,7 @@ python manage.py migrate
 6. [Optional step] create a superuser. It's not necessary, but you can do so if you wish.
 Run this command and follow the prompts
 ```
-python manage.py superuser
+python manage.py createsuperuser
 ```
 
 7. Run the server

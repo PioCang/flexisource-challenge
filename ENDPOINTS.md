@@ -35,3 +35,74 @@ Response:
 
 
 ## Trade-related endpoints
+
+### Load portfolio
+Request:
+```
+curl --request GET \
+  --url http://localhost:8000/portfolio/ \
+  --header 'Authorization: Token <YOUR_AUTH_TOKEN>' \
+  --header 'User-Agent: insomnia/10.3.0'
+```
+
+Response:
+```
+[
+    {
+        "ticker_symbol": "APPL",
+        "total_value": 600.0,
+        "total_quantity": 300
+    },
+    {
+        "ticker_symbol": "GOOG",
+        "total_value": 50.0,
+        "total_quantity": 50
+    },
+    {
+        "ticker_symbol": "TSLA",
+        "total_value": 106885.0,
+        "total_quantity": 500
+    }
+]
+```
+
+
+### Single Trade
+Request:
+```
+curl --request POST \
+  --url http://localhost:8000/trade/ \
+  --header 'Authorization: Token <YOUR_AUTH_TOKEN>' \
+  --header 'Content-Type: multipart/form-data' \
+  --header 'User-Agent: insomnia/10.3.0' \
+  --form symbol=GOOG \
+  --form quantity=100 \
+  --form action=buy
+```
+
+Possible Responses:
+```
+{
+    "message": "100 shares of GOOG bought"
+}
+```
+```
+{
+    "symbol": [
+        "no symbol provided"
+    ],
+    "quantity": [
+        "quantity must be a number"
+    ],
+    "action": [
+        "action should be only one of ['buy', 'sell']"
+    ]
+}
+```
+```
+{
+    "sell": [
+        "Trying to sell 300 shares of GOOG, but user only owns 250 shares"
+    ]
+}
+```

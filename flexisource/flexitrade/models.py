@@ -14,6 +14,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from flexitrade.enums import TradeActionChoices
 
 
 class TimeStampedModel(models.Model):
@@ -47,6 +48,9 @@ class Stock(TimeStampedModel):
         default=Decimal(0.0),
     )
 
+    def __str__(self):
+        return str(self.ticker_symbol)
+
 
 class Trade(TimeStampedModel):
     """The model that represents a trade by a User on a given Stock.
@@ -54,10 +58,6 @@ class Trade(TimeStampedModel):
     This should answer the question: Who did what to which stock, in what
     quantity, and when?
     """
-
-    class TradeAction(models.TextChoices):
-        BUY = ("b", "User buys.")
-        SELL = ("s", "User sells.")
 
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -68,7 +68,9 @@ class Trade(TimeStampedModel):
         Stock, related_name="traded_in", on_delete=models.PROTECT
     )
     action = models.CharField(
-        max_length=1, choices=TradeAction, default=TradeAction.BUY
+        max_length=1,
+        choices=TradeActionChoices,
+        default=TradeActionChoices.BUY,
     )
     quantity = models.IntegerField(
         validators=[MinValueValidator(1)], default=1
