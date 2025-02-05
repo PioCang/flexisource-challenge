@@ -15,7 +15,7 @@ catastrophic to the concept of finance as we know it).
 6. The market is always open for trading.
 
 
-## 1 Prepping virtual env
+## 1 Prepping the venv to run the server
 Let's prep a virtual env. I assume you have **pyenv** installed.
 For a small application, I want to avoid the memory requirements of Dockerizing
 this app.
@@ -27,25 +27,44 @@ pyenv activate flexisource
 ```
 
 2. Clone the repository and enter the project folder
-```
+```bash
 git clone https://github.com/PioCang/flexisource-challenge.git
+```
+
+3. We run everything inside this folder
+```bash
 cd flexisource-challenge/flexisource/
 ```
 
-3. Install the requirements. (Ensure the `fleixsource` virtual env is activated.)
-```
+4. Install the requirements. (Ensure the `fleixsource` virtual env is activated.)
+```bash
 pip install -r requirements
 ```
 
-4. Create a `.env` file inside **flexisource-challenge/flexisource/**
+5. Create a `.env` file inside **flexisource-challenge/flexisource/**
 ```bash
 echo "SECRET_KEY=\"django-insecure-any-random-string\"\nDEBUG=True" > test
 ```
 
-5. Run the server. We're going to be using the `sqlite` server here so no DB
-backend will be needed.
-```
+5. Run the migrations
+```bash
 python manage.py migrate
+```
+
+6. Let's create a user quickly. The username and password are both `foobar`
+
+    If on Mac:
+    ```
+    cat create_user.py | python manage.py shell
+    ```
+    If on Windows or Linux:
+    ```
+    python manage.py shell < create_user.py
+    ```
+Source: [StackOverflow](https://stackoverflow.com/a/47227653)
+
+7. Run the server
+```
 python manage.py runserver 8000
 ```
 
