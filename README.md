@@ -68,6 +68,7 @@ python manage.py runserver 8000
 
 ## 2 Using the app's APIs
 Please refer to [ENDPOINTS.md](./ENDPOINTS.md)
+I've also attached an HTTP Archive File for Insomnia / Postman [endpoints_requests.har](endpoints_requests.har) so it's easier to follow / use the endpoints.
 
 
 ## 3 Teardown
@@ -76,3 +77,6 @@ Please refer to [ENDPOINTS.md](./ENDPOINTS.md)
 ```
 pyenv virtualenv-delete flexisource
 ```
+3. Delete the `flexisource-challenge` folder
+
+# -- END
