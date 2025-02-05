@@ -51,17 +51,11 @@ echo "SECRET_KEY=\"django-insecure-any-random-string\"\nDEBUG=True" > test
 python manage.py migrate
 ```
 
-6. Let's create a user quickly. The username and password are both `foobar`
-
-    If on Mac:
-    ```
-    cat create_user.py | python manage.py shell
-    ```
-    If on Windows or Linux:
-    ```
-    python manage.py shell < create_user.py
-    ```
-Source: [StackOverflow](https://stackoverflow.com/a/47227653)
+6. [Optional step] create a superuser. It's not necessary, but you can do so if you wish.
+Run this command and follow the prompts
+```
+python manage.py superuser
+```
 
 7. Run the server
 ```
@@ -69,6 +63,9 @@ python manage.py runserver 8000
 ```
 
 
+## Using the app
+1. Signup for a non-super user on http://localhost:8000/auth/signup/
+2.
 
 
 
