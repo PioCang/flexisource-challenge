@@ -35,6 +35,38 @@ Response:
 
 
 ## Trade-related endpoints
+
+### Load portfolio
+Request:
+```
+curl --request GET \
+  --url http://localhost:8000/portfolio/ \
+  --header 'Authorization: Token <YOUR_AUTH_TOKEN>' \
+  --header 'User-Agent: insomnia/10.3.0'
+```
+
+Response:
+```
+[
+    {
+        "ticker_symbol": "APPL",
+        "total_value": 600.0,
+        "total_quantity": 300
+    },
+    {
+        "ticker_symbol": "GOOG",
+        "total_value": 50.0,
+        "total_quantity": 50
+    },
+    {
+        "ticker_symbol": "TSLA",
+        "total_value": 106885.0,
+        "total_quantity": 500
+    }
+]
+```
+
+
 ### Single Trade
 Request:
 ```
