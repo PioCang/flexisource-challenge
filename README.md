@@ -15,7 +15,7 @@ catastrophic to the concept of finance as we know it).
 6. The market is always open for trading.
 
 
-## 1 Prepping virtual env
+## 1 Prepping the venv to run the server
 Let's prep a virtual env. I assume you have **pyenv** installed.
 For a small application, I want to avoid the memory requirements of Dockerizing
 this app.
@@ -27,40 +27,47 @@ pyenv activate flexisource
 ```
 
 2. Clone the repository and enter the project folder
-```
+```bash
 git clone https://github.com/PioCang/flexisource-challenge.git
+```
+
+3. We run everything inside this folder
+```bash
 cd flexisource-challenge/flexisource/
 ```
 
-3. Install the requirements. (Ensure the `fleixsource` virtual env is activated.)
-```
+4. Install the requirements. (Ensure the `fleixsource` virtual env is activated.)
+```bash
 pip install -r requirements
 ```
 
-4. Create a `.env` file inside **flexisource-challenge/flexisource/**
+5. Create a `.env` file inside **flexisource-challenge/flexisource/**
 ```bash
 echo "SECRET_KEY=\"django-insecure-any-random-string\"\nDEBUG=True" > test
 ```
 
-5. Run the server. We're going to be using the `sqlite` server here so no DB
-backend will be needed.
-```
+5. Run the migrations
+```bash
 python manage.py migrate
+```
+
+6. [Optional step] create a superuser. It's not necessary, but you can do so if you wish.
+Run this command and follow the prompts
+```
+python manage.py superuser
+```
+
+7. Run the server
+```
 python manage.py runserver 8000
 ```
 
 
+## 2 Using the app's APIs
+Please refer to [ENDPOINTS.md](./ENDPOINTS.md)
 
 
-
-
-
-
-
-
-
-
-## N Teardown
+## 3 Teardown
 1. Stop the Django server with `Ctrl + C`
 2. Delete the environment with
 ```
