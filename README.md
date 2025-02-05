@@ -63,20 +63,11 @@ python manage.py runserver 8000
 ```
 
 
-## Using the app
-1. Signup for a non-super user on http://localhost:8000/auth/signup/
-2.
+## 2 Using the app's APIs
+Please refer to [ENDPOINTS.md](./ENDPOINTS.md)
 
 
-
-
-
-
-
-
-
-
-## N Teardown
+## 3 Teardown
 1. Stop the Django server with `Ctrl + C`
 2. Delete the environment with
 ```
