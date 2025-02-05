@@ -4,10 +4,20 @@ import random
 
 from flexitrade.enums import TradeActionChoices
 from flexitrade.models import Stock, Trade
+from flexitrade.queries import load_portfolio
 from flexitrade.validators import TradeValidator
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+class PortfolioView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get the whole porfolio of the user"""
+        portfolio_data = load_portfolio(request.user)
+        return Response(portfolio_data, status=status.HTTP_200_OK)
 
 
 class PlaceSingleTradeView(APIView):

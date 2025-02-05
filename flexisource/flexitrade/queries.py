@@ -9,6 +9,42 @@ from .models import Trade
 
 
 @staticmethod
+def load_portfolio(owner):
+    """Load the portfolio values of a user by replaying trade history
+
+    This will get the total number of shares remaining and value per stock.
+    References: https://stackoverflow.com/a/44915227
+    """
+
+    queryset = (
+        Trade.objects.filter(
+            actor=owner,
+        )
+        .annotate(
+            effective_quantity=Case(
+                When(action=TradeActionChoices.BUY, then=F("quantity")),
+                When(
+                    action=TradeActionChoices.SELL,
+                    then=(F("quantity") * Value(-1)),
+                ),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        )
+        .annotate(total_quantity=Sum("effective_quantity"))
+        .values("stock__ticker_symbol", "total_quantity")
+        .annotate(
+            total_value=F("total_quantity") * F("stock__price"),
+            ticker_symbol=F("stock__ticker_symbol"),
+        )
+        .values("ticker_symbol", "total_value", "total_quantity")
+        .order_by("ticker_symbol")
+    )
+
+    return queryset
+
+
+@staticmethod
 def calculate_owned_shares(owner, symbol):
     """Calculate the shares user owns of a stock by replaying trade history"""
 
