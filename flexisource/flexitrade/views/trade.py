@@ -1,6 +1,8 @@
 """Trading-related Views"""
 
+import os
 import random
+from copy import deepcopy
 from typing import Dict, List, Tuple
 
 import pandas as pd
@@ -48,7 +50,7 @@ class TradeExecutionMixin:
         verb = (
             "bought" if params["action"] == TradeActionChoices.BUY else "sold"
         )
-        msg = f"{params['quantity']} shares of {params['symbol']} {verb}"
+        msg = f"{params['quantity']} share(s) of {params['symbol']} {verb}"
         return msg
 
 
@@ -60,7 +62,9 @@ class PlaceSingleTradeView(APIView, TradeExecutionMixin):
     def post(self, request):
         """The view that places a trade on behalf of a user"""
 
-        trade_validator = TradeValidator(request.user, request.data)
+        params = deepcopy(request.data)
+        params["username"] = request.user.username
+        trade_validator = TradeValidator(params)
 
         if not trade_validator.is_valid():
             return Response(
@@ -92,25 +96,18 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
         if not csv_file.name.endswith(".csv"):
             raise ValueError("File is not CSV type")
 
-    def _parse_file_for_trades(self, df, owner) -> Tuple[Dict, Dict]:
-        """Parse the provided dataframe for trades and perform validation
+    def _parse_file_for_trades(self, df, username) -> Tuple[Dict, Dict]:
+        """Parse the provided dataframe for trades and perform validation"""
 
-        To speed up validation, the user's portfolio is loaded so the execution
-        doesn't end up selling more shares than the user owns.
-        """
-        headers = ["symbol", "quantity", "action"]
-        portfolio_data = load_portfolio(owner)
-
+        headers = ["symbol", "quantity", "action", "username"]
         valid_trades: List[Dict] = []
         errors: Dict[str, str] = {}
-        for index, row_data in df.iterrows():
-            params = {key: row_data[key] for key in headers}
-            ticker = params["symbol"]
-            if ticker in portfolio_data:
-                existing_shares = int(portfolio_data[ticker]["total_quantity"])
-                params["existing_shares"] = existing_shares
 
-            trade_validator = TradeValidator(owner, params)
+        for index, row_data in df.iterrows():
+            params = {key: row_data.get(key) for key in headers}
+            if username is not None:
+                params["username"] = username
+            trade_validator = TradeValidator(params)
 
             if not trade_validator.is_valid():
                 errors[index] = trade_validator.error_dict
@@ -130,7 +127,9 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
 
         df = pd.read_csv(csv_file, delimiter=",", dtype=str)
         df = df.where(pd.notnull(df), None)
-        valid_trades, errors = self._parse_file_for_trades(df, request.user)
+        valid_trades, errors = self._parse_file_for_trades(
+            df, request.user.username
+        )
 
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
@@ -151,3 +150,10 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(executed_trades, status=status.HTTP_201_CREATED)
+
+    @classmethod
+    def process_from_local_file(cls):
+        return
+        csv_filepath = os.getcwd() + "/bulk_order_local.csv"
+        with open(csv_filepath) as csv_file:
+            cls._validate_file(csv_file)

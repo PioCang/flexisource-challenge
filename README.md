@@ -62,7 +62,7 @@ python manage.py createsuperuser
 
 7. Run the server
 ```
-python manage.py runserver 8000
+python manage.py runserver 8000 --noreload
 ```
 
 
