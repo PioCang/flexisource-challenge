@@ -1,19 +1,24 @@
 """Class for validating trades"""
 from collections import defaultdict
 
+from django.contrib.auth import get_user_model
 from django.db.models import Model
 
 from .enums import TradeActionChoices
 from .queries import calculate_owned_shares
 
+UserModel = get_user_model()
+
 
 class TradeValidator:
-    def __init__(self, user, params):
-        self.owner: Model = user
+    """Validator class for Trades"""
+
+    def __init__(self, params):
+        self.username: str = params.get("username") or ""
         self.symbol: str = params.get("symbol") or ""
         self.quantity: int = params.get("quantity") or 0
         self.action: str = params.get("action") or ""
-        self.owned_shares: int = params.get("existing_shares") or None
+        self.owner: Model = None
 
         self.errors = defaultdict(list)
 
@@ -34,6 +39,7 @@ class TradeValidator:
     def validate_raw_inputs(self):
         """Validate inputs based on given values alone"""
 
+        self.validate_owner()
         self.validate_symbol()
         self.validate_quantity()
         self.validate_action()
@@ -55,6 +61,16 @@ class TradeValidator:
                 return False
 
         return True
+
+    def validate_owner(self) -> None:
+        """Validate the username and get the owner"""
+        key = "user"
+
+        try:
+            self.owner = UserModel.objects.get(username=self.username)
+        except UserModel.DoesNotExist:
+            msg = f"Nonexistent user '{self.username}'"
+            self.errors[key].append(msg)
 
     def validate_symbol(self) -> None:
         """Validate the raw value of symbol"""
@@ -102,11 +118,7 @@ class TradeValidator:
         This part of the validation needs to hit the database if
         `self.owned_shares` was not given
         """
-        if self.owned_shares is None:
-            owned_shares = calculate_owned_shares(self.owner, self.symbol)
-        else:
-            owned_shares = self.owned_shares
-
+        owned_shares = calculate_owned_shares(self.owner, self.symbol)
         if self.quantity > owned_shares:
             msg = (
                 f"Trying to sell {self.quantity} shares of {self.symbol}, "

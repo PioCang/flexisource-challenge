@@ -1,6 +1,10 @@
 """Trading-related Views"""
 
+import os
 import random
+from copy import deepcopy
+from datetime import datetime
+from pprint import pprint
 from typing import Dict, List, Tuple
 
 import pandas as pd
@@ -16,6 +20,8 @@ from rest_framework.views import APIView
 
 
 class PortfolioView(APIView):
+    """Veiw that loads a user's entire portofolio"""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -48,7 +54,10 @@ class TradeExecutionMixin:
         verb = (
             "bought" if params["action"] == TradeActionChoices.BUY else "sold"
         )
-        msg = f"{params['quantity']} shares of {params['symbol']} {verb}"
+        msg = (
+            f"{params['quantity']} share(s) of {params['symbol']} {verb} "
+            f"for {params['owner'].username}"
+        )
         return msg
 
 
@@ -60,7 +69,9 @@ class PlaceSingleTradeView(APIView, TradeExecutionMixin):
     def post(self, request):
         """The view that places a trade on behalf of a user"""
 
-        trade_validator = TradeValidator(request.user, request.data)
+        params = deepcopy(request.data)
+        params["username"] = request.user.username
+        trade_validator = TradeValidator(params)
 
         if not trade_validator.is_valid():
             return Response(
@@ -81,6 +92,8 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
     https://dev.to/frankezenwanne/how-to-upload-a-csv-file-to-django-rest-28fo
     """
 
+    LOCAL_CSV_FILE_PATH = f"{os.getcwd()}/bulk_order_local.csv"
+
     parser_classes = [FileUploadParser]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -92,25 +105,18 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
         if not csv_file.name.endswith(".csv"):
             raise ValueError("File is not CSV type")
 
-    def _parse_file_for_trades(self, df, owner) -> Tuple[Dict, Dict]:
-        """Parse the provided dataframe for trades and perform validation
+    def _parse_file_for_trades(self, df, username) -> Tuple[Dict, Dict]:
+        """Parse the provided dataframe for trades and perform validation"""
 
-        To speed up validation, the user's portfolio is loaded so the execution
-        doesn't end up selling more shares than the user owns.
-        """
-        headers = ["symbol", "quantity", "action"]
-        portfolio_data = load_portfolio(owner)
-
+        headers = ["symbol", "quantity", "action", "username"]
         valid_trades: List[Dict] = []
         errors: Dict[str, str] = {}
-        for index, row_data in df.iterrows():
-            params = {key: row_data[key] for key in headers}
-            ticker = params["symbol"]
-            if ticker in portfolio_data:
-                existing_shares = int(portfolio_data[ticker]["total_quantity"])
-                params["existing_shares"] = existing_shares
 
-            trade_validator = TradeValidator(owner, params)
+        for index, row_data in df.iterrows():
+            params = {key: row_data.get(key) for key in headers}
+            if username is not None:
+                params["username"] = username
+            trade_validator = TradeValidator(params)
 
             if not trade_validator.is_valid():
                 errors[index] = trade_validator.error_dict
@@ -130,14 +136,19 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
 
         df = pd.read_csv(csv_file, delimiter=",", dtype=str)
         df = df.where(pd.notnull(df), None)
-        valid_trades, errors = self._parse_file_for_trades(df, request.user)
+        valid_trades, errors = self._parse_file_for_trades(
+            df, request.user.username
+        )
 
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return self.bulk_execute_trades(valid_trades)
+        is_ok, payload = self.bulk_execute_trades(valid_trades)
+        if not is_ok:
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+        return Response(payload, status=status.HTTP_201_CREATED)
 
-    def bulk_execute_trades(self, trades_to_execute):
+    def bulk_execute_trades(self, trades_to_execute) -> Tuple[bool, Dict]:
         """Execute the trades in one atomic DB transaction"""
         executed_trades: Dict[str] = {}
         try:
@@ -146,8 +157,33 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
                     msg = self.execute_trade(params)
                     executed_trades[index] = msg
         except Exception as err:
-            return Response(
-                {"error": f"Write failure {str(err)}"},
-                status=status.HTTP_400_BAD_REQUEST,
+            return (False, {"error": f"Write failure {str(err)}"})
+
+        return (True, executed_trades)
+
+    def process_from_local_file(self):
+        """Process a csv file locally"""
+        with open(self.LOCAL_CSV_FILE_PATH) as csv_file:
+            self._validate_file(csv_file)
+            df = pd.read_csv(csv_file, delimiter=",", dtype=str)
+            df = df.where(pd.notnull(df), None)
+            valid_trades, errors = self._parse_file_for_trades(
+                df, username=None
             )
-        return Response(executed_trades, status=status.HTTP_201_CREATED)
+
+        if errors:
+            print(f"\n\n[{datetime.now().isoformat()}] ", end="")
+            print("Bulk parse from local file failed")
+            pprint(errors)
+            return
+
+        is_ok, payload = self.bulk_execute_trades(valid_trades)
+        if not is_ok:
+            print(f"\n\n[{datetime.now().isoformat()}] ", end="")
+            print("Bulk trade from local file failed")
+            pprint(payload)
+
+        else:
+            print(f"\n\n[{datetime.now().isoformat()}] ", end="")
+            print("Bulk trade successful")
+            pprint(payload)
