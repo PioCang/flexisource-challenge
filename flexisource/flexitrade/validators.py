@@ -69,7 +69,7 @@ class TradeValidator:
         try:
             self.owner = UserModel.objects.get(username=self.username)
         except UserModel.DoesNotExist:
-            msg = f"Invalid username '{self.username}'"
+            msg = f"Nonexistent user '{self.username}'"
             self.errors[key].append(msg)
 
     def validate_symbol(self) -> None:

@@ -3,6 +3,8 @@
 import os
 import random
 from copy import deepcopy
+from datetime import datetime
+from pprint import pprint
 from typing import Dict, List, Tuple
 
 import pandas as pd
@@ -18,6 +20,8 @@ from rest_framework.views import APIView
 
 
 class PortfolioView(APIView):
+    """Veiw that loads a user's entire portofolio"""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -50,7 +54,10 @@ class TradeExecutionMixin:
         verb = (
             "bought" if params["action"] == TradeActionChoices.BUY else "sold"
         )
-        msg = f"{params['quantity']} share(s) of {params['symbol']} {verb}"
+        msg = (
+            f"{params['quantity']} share(s) of {params['symbol']} {verb} "
+            f"for {params['owner'].username}"
+        )
         return msg
 
 
@@ -84,6 +91,8 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
     Reference:
     https://dev.to/frankezenwanne/how-to-upload-a-csv-file-to-django-rest-28fo
     """
+
+    LOCAL_CSV_FILE_PATH = f"{os.getcwd()}/bulk_order_local.csv"
 
     parser_classes = [FileUploadParser]
     permission_classes = [permissions.IsAuthenticated]
@@ -134,9 +143,12 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return self.bulk_execute_trades(valid_trades)
+        is_ok, payload = self.bulk_execute_trades(valid_trades)
+        if not is_ok:
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+        return Response(payload, status=status.HTTP_201_CREATED)
 
-    def bulk_execute_trades(self, trades_to_execute):
+    def bulk_execute_trades(self, trades_to_execute) -> Tuple[bool, Dict]:
         """Execute the trades in one atomic DB transaction"""
         executed_trades: Dict[str] = {}
         try:
@@ -145,15 +157,33 @@ class PlaceBulkTrade(APIView, TradeExecutionMixin):
                     msg = self.execute_trade(params)
                     executed_trades[index] = msg
         except Exception as err:
-            return Response(
-                {"error": f"Write failure {str(err)}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return Response(executed_trades, status=status.HTTP_201_CREATED)
+            return (False, {"error": f"Write failure {str(err)}"})
 
-    @classmethod
-    def process_from_local_file(cls):
-        return
-        csv_filepath = os.getcwd() + "/bulk_order_local.csv"
-        with open(csv_filepath) as csv_file:
-            cls._validate_file(csv_file)
+        return (True, executed_trades)
+
+    def process_from_local_file(self):
+        """Process a csv file locally"""
+        with open(self.LOCAL_CSV_FILE_PATH) as csv_file:
+            self._validate_file(csv_file)
+            df = pd.read_csv(csv_file, delimiter=",", dtype=str)
+            df = df.where(pd.notnull(df), None)
+            valid_trades, errors = self._parse_file_for_trades(
+                df, username=None
+            )
+
+        if errors:
+            print(f"\n\n[{datetime.now().isoformat()}] ", end="")
+            print("Bulk parse from local file failed")
+            pprint(errors)
+            return
+
+        is_ok, payload = self.bulk_execute_trades(valid_trades)
+        if not is_ok:
+            print(f"\n\n[{datetime.now().isoformat()}] ", end="")
+            print("Bulk trade from local file failed")
+            pprint(payload)
+
+        else:
+            print(f"\n\n[{datetime.now().isoformat()}] ", end="")
+            print("Bulk trade successful")
+            pprint(payload)
