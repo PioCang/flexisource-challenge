@@ -37,6 +37,11 @@ Response:
 ## Trade-related endpoints
 
 ### 1) Load portfolio
+> Create an endpoint to retrieve the total value invested in a single stock by a user. To
+calculate this - we need to sum all the value of all orders placed by the user for a single
+stock. Order value is calculated by multiplying quantity and stock price.
+
+
 Request:
 ```
 curl --request GET \
@@ -68,6 +73,9 @@ Response:
 
 
 ### 2) Single Trade
+> Create an endpoint to let users place trades. When an order is placed, we need to
+record the quantity of the stock the user wants to buy or sell.
+
 Request:
 ```
 curl --request POST \
@@ -113,8 +121,12 @@ Possible Response: Failure
 
 
 ### 3) Bulk Trade
+> Create an endpoint that accepts a CSV upload to place trades in bulk.
+
 This one is tricky because you need to provide the filename inside the `Content-Disposition` header,
 while also providing the data as a hash for the `--data` flag
+
+A sample file [bulk_order_web.csv](./flexisource/bulk_order_web.csv) file is supplied for you.
 
 Request:
 ```

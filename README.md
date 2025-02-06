@@ -4,7 +4,7 @@
 I've made the following decisions in order to accelerate and simplify the logic
 of the app without contravening the bullet points laid out in the Coding Challenge
 Document. Admittedly, these design decisions are ***frankly absurd*** for a
-trading app. These premises that do not hold in the real world (and would be
+trading app. These premises do not hold in the real world (and would be
 catastrophic to the concept of finance as we know it).
 
 1. Users have unlimited purchasing power.
@@ -68,7 +68,14 @@ python manage.py runserver 8000 --noreload
 
 ## 2 Using the app's APIs
 Please refer to [ENDPOINTS.md](./ENDPOINTS.md)
+
 I've also attached an HTTP Archive File for Insomnia / Postman [endpoints_requests.har](endpoints_requests.har) so it's easier to follow / use the endpoints.
+
+>Create a cron that parses a CSV from a preconfigured directory to place trades in bulk.
+
+You should expect the Bulk Trade cron job to run every minute.
+It will operate on [bulk_order_local.csv](./flexisource/bulk_order_local.csv).
+It will print logs as it executes.
 
 
 ## 3 Teardown
