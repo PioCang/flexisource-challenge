@@ -24,8 +24,9 @@ For a small application, I want to avoid the memory requirements of Dockerizing
 this app.
 
 1. Create a virtualenv to sandbox all Pip changes
+Needs `pyenv` and `pyenv-virtualenv`
 ```bash
-newvenv flexisource 3.11.3
+pyenv virtualenv 3.11.3
 pyenv activate flexisource
 ```
 
