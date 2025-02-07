@@ -47,7 +47,7 @@ pip install -r requirements
 
 5. Create a `.env` file inside **flexisource-challenge/flexisource/**
 ```bash
-echo "SECRET_KEY=\"django-insecure-any-random-string\"\nDEBUG=True" > test
+echo "SECRET_KEY=\"django-insecure-any-random-string\"\nDEBUG=True" > .env
 ```
 
 5. Run the migrations
